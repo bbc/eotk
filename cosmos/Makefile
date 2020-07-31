@@ -15,4 +15,4 @@ prepare:
 	tar -zcf SOURCES/src.tar.gz README.md
 
 clean: 
-	rm -rf BUILD RPMS SRPMS 
+	rm -rf BUILD RPMS SRPMS SOURCES
