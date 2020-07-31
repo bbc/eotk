@@ -24,7 +24,7 @@
     },
     "ImageId": {
       "Default": "ami-9398d3e0",
-      "Type": "String",
+      "Type":"AWS::EC2::Image::Id",
       "Description": "The AMI to use for this component"
     },
     "MinSize": {
@@ -48,7 +48,7 @@
       "Description": "The maximum number of instances to be killed at one time during an ASG update."
     },
     "InstanceType": {
-      "Default": "a1.mediun",
+      "Default": "a1.medium",
       "Type": "String",
       "Description": "The type (cpu/ram) of the EC2 instances"
     },
@@ -65,10 +65,6 @@
   },
   "Mappings": {
     "OperationsMap": {
-      "SecurityGroupStackMap": {
-        "test": "test-ws-partners-core-SecurityGroupStack-CIWZAD831WU2",
-        "live": "live-ws-partners-core-SecurityGroupStack-SYT5JIU2MUSV"
-      },
       "DomainNameBaseMap": {
         "live": "7a576ea3ed7ca599.xhst.bbci.co.uk.",
         "test": "1c9eb4db7739eb1a.xhst.bbci.co.uk."
@@ -84,18 +80,37 @@
     }
   },
   "Resources": {
+    "LaunchTemplate": {
+      "Type":"AWS::EC2::LaunchTemplate",
+      "Properties": {
+        "LaunchTemplateName": {"Fn::Sub":"${AWS::StackName}-launch-template"},
+        "LaunchTemplateData":{
+          "BlockDeviceMappings":[{
+            "Ebs":{
+              "VolumeSize":"22",
+              "VolumeType":"gp2",
+              "DeleteOnTermination": true,
+              "Encrypted": true
+            },
+            "DeviceName":"/dev/xvdcz"
+          }],
+          "CreditSpecification": { "CpuCredits":"unlimited" },
+          "ImageId":{"Ref":"ImageId"},
+          "KeyName": { "Ref": "KeyName" },
+          "InstanceType": { "Ref": "InstanceType" },
+          "Monitoring":{"Enabled":true},
+          "SecurityGroupIds": [
+            { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-SSHFromBastionsSecGroup" }}
+          ]
+        }
+      }
+    },
     "LoadBalancer": {
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
       "Properties": {
         "Type": "network",
-        "Scheme": "internal",
+        "Scheme": "internet-facing",
         "Name": "OnionLoadBalancer",
-        "SecurityGroups": [
-          { "Fn::ImportValue": { "Fn::Join": [ "-", [
-            { "Fn::FindInMap": [ "OperationsMap", "SecurityGroupStackMap", { "Ref": "Environment" }]},
-            "BackendInternalLoadbalancerSgId"
-          ]]}}
-        ],
         "Subnets": [
           { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet0" }},
           { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet1" }},
@@ -114,7 +129,6 @@
     "ComponentAutoScalingGroup": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "HealthCheckGracePeriod": 300,
         "Tags": [
           {
             "Key": "BBCEnvironment",
@@ -137,11 +151,6 @@
             "PropagateAtLaunch": true
           }
         ],
-        "LoadBalancerNames": [{ "Ref": "ComponentElasticLoadBalancer" }],
-        "TargetGroupARNs": [
-          { "Ref": "ALBTargetGroup" },
-          { "Ref": "BackendTargetGroupForFrontendLoadbalancer" }
-        ],
         "MinSize": { "Ref": "MinSize" },
         "MaxSize": { "Ref": "MaxSize" },
         "VPCZoneIdentifier": [
@@ -149,13 +158,14 @@
           { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet1" }},
           { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet2" }}
         ],
-        "LaunchConfigurationName": { "Ref": "ComponentLaunchConfiguration" },
-        "AvailabilityZones": [
-          "eu-west-1a",
-          "eu-west-1b",
-          "eu-west-1c"
-        ],
-        "HealthCheckType": "ELB"
+        "LaunchTemplate":{
+          "LaunchTemplateId":{ "Ref":"LaunchTemplate"
+          },
+          "Version":{ "Fn::GetAtt":[ "LaunchTemplate", "LatestVersionNumber" ] }
+        },
+        "AvailabilityZones": [ "eu-west-1a", "eu-west-1b", "eu-west-1c" ],
+        "HealthCheckGracePeriod": 300,
+        "HealthCheckType": "EC2"
       },
       "UpdatePolicy": {
         "AutoScalingRollingUpdate": {
@@ -163,22 +173,6 @@
           "MaxBatchSize": { "Ref": "UpdateMaxBatchSize" },
           "MinInstancesInService": { "Ref": "UpdateMinInService" }
         }
-      }
-    },
-    "ComponentLaunchConfiguration": {
-      "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "Properties": {
-        "KeyName": { "Ref": "KeyName" },
-        "SecurityGroups": [
-          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-SSHFromBastionsSecGroup" }},
-          { "Fn::ImportValue": { "Fn::Join": [ "-", [
-            { "Fn::FindInMap": [ "OperationsMap", "SecurityGroupStackMap", { "Ref": "Environment" }]},
-            "BackendAmiSgId"
-          ]]}}
-        ],
-        "InstanceType": { "Ref": "InstanceType" },
-        "IamInstanceProfile": { "Ref": "ComponentInstanceProfile" },
-        "ImageId": { "Ref": "ImageId" }
       }
     },
     "ComponentInstanceProfile": {
