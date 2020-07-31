@@ -9,9 +9,8 @@ local: prepare
 	mock-build --os 7 
 
 prepare: 
-	pwd
 	mkdir SOURCES
-	cp ../README.md .
+	cp /var/lib/jenkins/workspace/bbc-onion/README.md .
 	tar -zcf SOURCES/src.tar.gz README.md
 
 clean: 
