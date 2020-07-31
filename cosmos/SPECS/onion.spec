@@ -46,4 +46,4 @@ rm -rf %{buildroot}
 
 %files
 %defattr(644, nginx, nginx, 755)
-README.md
+/tmp/README.md

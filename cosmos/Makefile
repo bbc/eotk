@@ -11,8 +11,9 @@ local: prepare
 
 prepare: 
 	mkdir SOURCES
-	cp /var/lib/jenkins/workspace/bbc-onion/README.md .
-	tar zcf SOURCES/src.tar.gz README.md
+	mkdir tmp
+	cp /var/lib/jenkins/workspace/bbc-onion/README.md tmp
+	tar zcf SOURCES/src.tar.gz tmp
 
 clean: 
 	rm -rf BUILD RPMS SRPMS SOURCES
