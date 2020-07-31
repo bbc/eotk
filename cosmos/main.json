@@ -1,0 +1,236 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "A component template for the BBC Onion Service",
+  "Parameters": {
+    "Environment": {
+      "Default": "test",
+      "ConstraintDescription": "Values must be test or live",
+      "Type": "String",
+      "Description": "The deployment environment",
+      "AllowedValues": [
+        "test",
+        "live"
+      ]
+    },
+    "UpdatePauseTime": {
+      "Default": "PT0S",
+      "Type": "String",
+      "Description": "The time to wait between new instances coming online and the next batch being killed during an ASG update."
+    },
+    "UpdateMinInService": {
+      "Default": "0",
+      "Type": "String",
+      "Description": "The minimum number of instances in service during an ASG update."
+    },
+    "ImageId": {
+      "Default": "ami-9398d3e0",
+      "Type": "String",
+      "Description": "The AMI to use for this component"
+    },
+    "MinSize": {
+      "Default": "1",
+      "Type": "String",
+      "Description": "The minimum number of instances"
+    },
+    "MaxSize": {
+      "Default": "1",
+      "Type": "String",
+      "Description": "The maximum number of instances"
+    },
+    "KeyName": {
+      "Default": "cosmos",
+      "Type": "String",
+      "Description": "Name of existing EC2 keypair to enable SSH access to the created instances"
+    },
+    "UpdateMaxBatchSize": {
+      "Default": "1",
+      "Type": "String",
+      "Description": "The maximum number of instances to be killed at one time during an ASG update."
+    },
+    "InstanceType": {
+      "Default": "a1.mediun",
+      "Type": "String",
+      "Description": "The type (cpu/ram) of the EC2 instances"
+    },
+    "JenkinsAgentRoleArn": {
+      "Default": "arn:aws:iam::576677253489:role/test-wsd-jenkins-agent-main-Role-15LVQ4Y5WTOU2",
+      "Type": "String",
+      "Description": "The full ARN of the Jenkins agent role"
+    },
+    "CoreInfrastructureStackName": {
+      "Default": "core-infrastructure",
+      "Type": "String",
+      "Description": "Name of the AWS account's core-infrastructure stack. Used to import other network parameters (vpc id, subnets etc)"
+    }
+  },
+  "Mappings": {
+    "OperationsMap": {
+      "SecurityGroupStackMap": {
+        "test": "test-ws-partners-core-SecurityGroupStack-CIWZAD831WU2",
+        "live": "live-ws-partners-core-SecurityGroupStack-SYT5JIU2MUSV"
+      },
+      "DomainNameBaseMap": {
+        "live": "7a576ea3ed7ca599.xhst.bbci.co.uk.",
+        "test": "1c9eb4db7739eb1a.xhst.bbci.co.uk."
+      },
+      "CnameEntryMap": {
+        "live": "onion.ws",
+        "test": "onion.ws.test"
+      },
+      "VpcCidrIpMap": {
+        "live": "10.124.64.0/18",
+        "test": "10.98.0.0/18"
+      }
+    }
+  },
+  "Resources": {
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Type": "network",
+        "Scheme": "internal",
+        "Name": "OnionLoadBalancer",
+        "SecurityGroups": [
+          { "Fn::ImportValue": { "Fn::Join": [ "-", [
+            { "Fn::FindInMap": [ "OperationsMap", "SecurityGroupStackMap", { "Ref": "Environment" }]},
+            "BackendInternalLoadbalancerSgId"
+          ]]}}
+        ],
+        "Subnets": [
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet0" }},
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet1" }},
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet2" }}
+        ]
+      }
+    },
+    "ComponentScalingPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "ScalingAdjustment": 1,
+        "AutoScalingGroupName": { "Ref": "ComponentAutoScalingGroup" },
+        "AdjustmentType": "ChangeInCapacity"
+      }
+    },
+    "ComponentAutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "HealthCheckGracePeriod": 300,
+        "Tags": [
+          {
+            "Key": "BBCEnvironment",
+            "Value": { "Ref": "Environment" },
+            "PropagateAtLaunch": true
+          },
+          {
+            "Key": "Name",
+            "Value": { "Fn::Join": [ "", [ { "Ref": "Environment" }, "ws-onion" ]]},
+            "PropagateAtLaunch": true
+          },
+          {
+            "Key": "BBCComponent",
+            "Value": "ws-onion",
+            "PropagateAtLaunch": true
+          },
+          {
+            "Key": "BBCProject",
+            "Value": "ws-onion",
+            "PropagateAtLaunch": true
+          }
+        ],
+        "LoadBalancerNames": [{ "Ref": "ComponentElasticLoadBalancer" }],
+        "TargetGroupARNs": [
+          { "Ref": "ALBTargetGroup" },
+          { "Ref": "BackendTargetGroupForFrontendLoadbalancer" }
+        ],
+        "MinSize": { "Ref": "MinSize" },
+        "MaxSize": { "Ref": "MaxSize" },
+        "VPCZoneIdentifier": [
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet0" }},
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet1" }},
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-PrivateSubnet2" }}
+        ],
+        "LaunchConfigurationName": { "Ref": "ComponentLaunchConfiguration" },
+        "AvailabilityZones": [
+          "eu-west-1a",
+          "eu-west-1b",
+          "eu-west-1c"
+        ],
+        "HealthCheckType": "ELB"
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": { "Ref": "UpdatePauseTime" },
+          "MaxBatchSize": { "Ref": "UpdateMaxBatchSize" },
+          "MinInstancesInService": { "Ref": "UpdateMinInService" }
+        }
+      }
+    },
+    "ComponentLaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroups": [
+          { "Fn::ImportValue": { "Fn::Sub": "${CoreInfrastructureStackName}-SSHFromBastionsSecGroup" }},
+          { "Fn::ImportValue": { "Fn::Join": [ "-", [
+            { "Fn::FindInMap": [ "OperationsMap", "SecurityGroupStackMap", { "Ref": "Environment" }]},
+            "BackendAmiSgId"
+          ]]}}
+        ],
+        "InstanceType": { "Ref": "InstanceType" },
+        "IamInstanceProfile": { "Ref": "ComponentInstanceProfile" },
+        "ImageId": { "Ref": "ImageId" }
+      }
+    },
+    "ComponentInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [{ "Ref": "ComponentRole" }]
+      }
+    },
+    "ComponentPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "ComponentPolicy",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [ "sts:AssumeRole" ],
+              "Resource": [ "*" ],
+              "Effect": "Allow"
+            },
+            {
+              "Action": [ "cloudwatch:PutMetricData" ],
+              "Resource": [ "*" ],
+              "Effect": "Allow"
+            },
+            {
+              "Action": [ "cloudformation:Describe*" ],
+              "Resource": [ "*" ],
+              "Effect": "Allow"
+            },
+            {
+              "Action": [ "ec2:Describe*" ],
+              "Resource": [ "*" ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [{ "Ref": "ComponentRole" }]
+      }
+    },
+    "ComponentRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Statement": [{
+            "Action": [ "sts:AssumeRole" ],
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ec2.amazonaws.com" ]}
+          }]
+        }
+      }
+    }
+  }
+}
