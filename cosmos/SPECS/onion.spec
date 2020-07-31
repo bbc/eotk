@@ -5,13 +5,13 @@ Group: Application/Web
 License: Internal BBC use only
 Summary: BBC Onion
 Source0: src.tar.gz
-Requires: cloud-httpd24-ssl-services-devs-staff, nginx, redis, awscli, python-boto3
+Requires: nginx, awscli, python-boto3
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
 
 %description
-Alec Muffets EOTK, baked by the BBC
+Alec Muffet's EOTK, baked by the BBC
 
 %prep
 %setup -T -c all
@@ -46,6 +46,4 @@ rm -rf %{buildroot}
 
 %files
 %defattr(644, nginx, nginx, 755)
-%defattr(755, root, root, 755)
-/etc/bake-scripts/ws-partners-backend
-/usr/local/bin
+README.md
