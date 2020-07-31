@@ -2,8 +2,7 @@
 COMPONENT := bbc-onion
 
 release: clean prepare
-	#mock-build --os 7 --define "buildnum $(shell cosmos-release generate-version $(COMPONENT))"
-	mock-build --os 7 --define "buildnum 1"
+	mock-build --os 7 --define "buildnum $(shell cosmos-release generate-version $(COMPONENT))"
 	cosmos-release service $(COMPONENT) RPMS/*.rpm
 
 local: prepare
