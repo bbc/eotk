@@ -9,7 +9,10 @@ local: prepare
 	mock-build --os 7 
 
 prepare: 
-	tar -C .. -zcf SOURCES/src.tar.gz README.md
+	pwd
+	mkdir SOURCES
+	cp ../README.md .
+	tar -zcf SOURCES/src.tar.gz README.md
 
 clean: 
 	rm -rf BUILD RPMS SRPMS 
