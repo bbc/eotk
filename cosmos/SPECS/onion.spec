@@ -20,6 +20,8 @@ Alec Muffet's EOTK, baked by the BBC
 
 %install
 tar -C %{buildroot} -xzf %{SOURCE0}
+cd %{buildroot}/opt.d
+./build-centos-8.2.2004.sh
 
 %pre
 
@@ -46,6 +48,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(644, nginx, nginx, 755)
+%attr(755,root,-) /opt.d/build-centos-8.2.2004.sh
 /tmp/README.md
 /tmp/eotk
 /tmp/demo.d
