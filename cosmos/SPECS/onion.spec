@@ -47,3 +47,10 @@ rm -rf %{buildroot}
 %files
 %defattr(644, nginx, nginx, 755)
 /tmp/README.md
+/tmp/eotk
+/tmp/demo.d
+/tmp/docs.d
+/tmp/lib.d
+/tmp/opt.d
+/tmp/tools.d
+/tmp/templates.d
