@@ -14,7 +14,7 @@ prepare:
 	cp /var/lib/jenkins/workspace/bbc-onion/README.md tmp
 	cp -r /var/lib/jenkins/workspace/bbc-onion/eotk tmp
 	cp -r /var/lib/jenkins/workspace/bbc-onion/demo.d tmp
-	cp -r /var/lib/jenkins/workspace/bbc-onion/doc.d tmp
+	cp -r /var/lib/jenkins/workspace/bbc-onion/docs.d tmp
 	cp -r /var/lib/jenkins/workspace/bbc-onion/lib.d tmp
 	cp -r /var/lib/jenkins/workspace/bbc-onion/opt.d tmp
 	cp -r /var/lib/jenkins/workspace/bbc-onion/templates.d tmp
