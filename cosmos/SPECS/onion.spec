@@ -21,7 +21,7 @@ Alec Muffet's EOTK, baked by the BBC
 %install
 tar -C %{buildroot} -xzf %{SOURCE0}
 cd %{buildroot}/opt.d
-./build-centos-8.2.2004.sh
+install -m 755 -d %{buildroot}/opt.d/build-centos-8.2.2004.sh %{buildroot}
 
 %pre
 
