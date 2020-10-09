@@ -7,11 +7,11 @@ opt_dir=`pwd`
 
 
 # build openresty
-SetupOpenRestyVars || exit 1
-CustomiseVars || exit 1
-SetupForBuild || exit 1
-ConfigureOpenResty || exit 1
-BuildAndCleanup || exit 1
+# SetupOpenRestyVars || exit 1
+# CustomiseVars || exit 1
+# SetupForBuild || exit 1
+# ConfigureOpenResty || exit 1
+# BuildAndCleanup || exit 1
 
 # build tor
 SetupTorVars || exit 1
