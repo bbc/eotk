@@ -1,4 +1,3 @@
-@@ -0,0 +1,35 @@
 #!/bin/sh -x
 
 # platform-independent lib.sh
