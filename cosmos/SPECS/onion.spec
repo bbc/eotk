@@ -5,7 +5,7 @@ Group: Application/Web
 License: Internal BBC use only
 Summary: BBC Onion
 Source0: src.tar.gz
-Requires: nginx, awscli, python-boto3, git, curl, gcc, libevent-devel, openssl-devel, pcre-devel, openresty, tor
+Requires: nginx, awscli, python-boto3, git, curl, gcc, libevent-devel, openssl-devel, pcre-devel, openresty, tor, nginx-module-substitutions
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
