@@ -5,7 +5,7 @@ Group: Application/Web
 License: Internal BBC use only
 Summary: BBC Onion
 Source0: src.tar.gz
-Requires: nginx, awscli, python-boto3, git, curl, gcc, libevent-devel, openssl-devel, pcre-devel, openresty, tor
+Requires: nginx, awscli, python-boto3, git, curl, gcc, libevent-devel, openssl-devel, pcre-devel, ws-onion, tor
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
@@ -15,13 +15,6 @@ Alec Muffet's EOTK, baked by the BBC
 
 %prep
 %setup -T -c all
-
-
-
-git clone git://github.com/yaoweibin/ngx_http_substitutions_filter_module.git
-
-
-./configure --add-module= %{buildroot}/ngx_http_substitutions_filter_module
 
 
 
