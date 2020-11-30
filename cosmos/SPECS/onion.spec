@@ -1,11 +1,11 @@
-Name: onion
+Name: eotk_bbc
 Version: 0.1.%{?buildnum:%{buildnum}}
 Release: 1%{?dist}
 Group: Application/Web
 License: Internal BBC use only
 Summary: BBC Onion
 Source0: src.tar.gz
-Requires: awscli, python-boto3, git, curl, gcc, libevent-devel, nginx, openssl-devel, pcre-devel, openresty, tor
+Requires: ws-onion-openresty, nginx, awscli, python-boto3, git, curl, gcc, libevent-devel, openssl-devel, pcre-devel, openresty, tor
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
@@ -18,12 +18,21 @@ Alec Muffet's EOTK, baked by the BBC
 
 
 
+mkdir -p %{buildroot}/%{_bindir}
+
+mkdir -p %{buildroot}/%{_libdir}
+
+
+
+
 
 %build
+%define _unpackaged_files_terminate_build 0
 
 %install
-tar -C %{buildroot} -xzf %{SOURCE0}
-install -m 755 -d build-centos-8.2.2004.sh %{buildroot}/
+
+tar -xzf %{SOURCE0} -C %{buildroot}
+install -m 755 -d build-centos-8.2.2004.sh %{buildroot}/%{_libdir}
 
 %pre
 
@@ -42,7 +51,7 @@ getent passwd nginx >/dev/null || \
 
 %post
 
-%postun
+%postun:
 
 
 %clean
@@ -51,14 +60,14 @@ rm -rf %{buildroot}
 %files
 %defattr(644, nginx, nginx, 755)
 %defattr(-,root,root,-)
+%{_libdir}
 
+/eotk/README.md
+/eotk/eotk
+/eotk/demo.d
+/eotk/docs.d
+/eotk/lib.d
+/eotk/opt.d
+/eotk/tools.d
+/eotk/templates.d
 
-
-/tmp/README.md
-/tmp/eotk
-/tmp/demo.d
-/tmp/docs.d
-/tmp/lib.d
-/tmp/opt.d
-/tmp/tools.d
-/tmp/templates.d
