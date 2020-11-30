@@ -62,12 +62,11 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_libdir}
 
-/eotk/README.md
-/eotk/eotk
-/eotk/demo.d
-/eotk/docs.d
-/eotk/lib.d
-/eotk/opt.d
-/eotk/tools.d
-/eotk/templates.d
+tmp/README.mdtmp/eotk
+tmp/demo.d
+tmp/docs.d
+tmp/lib.d
+tmp/opt.d
+tmp/tools.d
+tmp/templates.d
 
