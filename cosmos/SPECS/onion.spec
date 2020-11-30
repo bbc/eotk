@@ -62,11 +62,11 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_libdir}
 
-tmp/README.mdtmp/eotk
-tmp/demo.d
-tmp/docs.d
-tmp/lib.d
-tmp/opt.d
-tmp/tools.d
-tmp/templates.d
+/tmp/README.mdtmp/eotk
+/tmp/demo.d
+/tmp/docs.d
+/tmp/lib.d
+/tmp/opt.d
+/tmp/tools.d
+/tmp/templates.d
 
